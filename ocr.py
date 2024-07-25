@@ -12,7 +12,7 @@ from PIL import Image
 class Ocr:
     def __init__(self):
         self.target_ocr = ddddocr.DdddOcr(det=True, show_ad=False)
-        self.ocr = ddddocr.DdddOcr(show_ad=False)
+        self.ocr = ddddocr.DdddOcr(show_ad=False,beta=True)
 
     def recognize_text(self, image_byte) -> str:
         """
