@@ -6,7 +6,7 @@ import numpy as np
 from delta_image import background_removal
 from ocr import Ocr
 from text_rotate import merge_contour_points, draw_min_bounding_rect
-from util import hash_md5, image_to_cv2, cv2_to_byte, IN_IMAGE_ENTRIES, OUT_IMAGE_DIR
+from util import hash_md5, image_to_cv2, cv2_to_byte, IN_IMAGE_ENTRIES, OUT_IMAGE_DIR, show
 
 
 def hash_background(img):
@@ -77,6 +77,7 @@ def filter_background(background_list):
         point_dict = dict()
         key = background["key"]
         image = background["image"]
+
         for _bg in background_list:
             if key == _bg["key"]:
                 continue
@@ -135,7 +136,6 @@ def splicing(img_list):
                 continue
             other_image = _clear_text_image["image"]
             copied_image = full_image(point_lst, copied_image, other_image)
-            # show(copied_image,"copied_image")
 
             full_after_image = np.copy(copied_image)
             is_black = [is_black_box(point, copied_image) for point in point_lst]
@@ -162,18 +162,22 @@ def splicing(img_list):
     max_key = max(fill_image_dict, key=lambda k: fill_image_dict[k]["count"])
     max_count = max(fill_image_dict[k]['count'] for k in fill_image_dict)
     background_list = [{"key": k, "image": v["image"]} for k, v in fill_image_dict.items() if v['count'] == max_count]
-    if len(background_list) > 1:
-        return filter_background(background_list)
+    if len(background_list) > 2:
+        image = filter_background(background_list)
+        if image:
+            return image
     max_image = fill_image_dict[max_key]["image"]
-
     return max_image
 
 
 def start():
     img_classification_dict = img_classification()
     for name, images in img_classification_dict.items():
+        if len(images) < 8:
+            print(f"{name} 底图太少可能造成分离不准确! 样本数:{len(images)}")
         image = splicing(images)
         cv2.imwrite(f'{OUT_IMAGE_DIR}/{name}.png', image)
+        print(f"{name} 底图生成成功!")
 
 
 if __name__ == '__main__':
